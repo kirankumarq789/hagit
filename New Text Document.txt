@@ -15,7 +15,7 @@ class B{
 }
 you can compile as javac Sample.java
 but to know Class A,B you should run with java A || java B
-
+Note::for each class(even though in the same file there are multiple java classes), for every class an individual byte code for that particular class is generated.
 Ex2::
 consider a java file is saved with public identifier
 you should run and compile with that public identified file.
@@ -354,7 +354,30 @@ class Student{
 
 
 nested class::
+--------------
 
+
+
+nested interface::
+------------------
+we can declare an interface as an member of a class or an interface it is called as nested interface.
+
+public class First implements A.IA{
+	public static void main(String args[]){  
+	    
+	    A.IA a=new First();
+	  } 	
+}
+
+class A {
+	interface IA {
+
+	}
+}
+
+//we can make nested interfaces as public,private,protected,default
+
+//If we want to make an interface with in an another interface that interface members need not be protected or private, because no access modifiers are allowed on the interface members.
 
 this keyword::
 --------------
@@ -515,6 +538,8 @@ ArrayList can grow or sink in size.
 ArrayList<Integer> arr=new ArrayList<Integer>();
 
 -->The ArrayList is present in java.util package
+
+
 -->In java it is always pass by value only.
 
 Inheritance::
@@ -941,7 +966,43 @@ class Dog extends Animal{
 
 Instance of::
 -------------
+The instance of operator is used to check whether a reference variable belongs to the particular object or not.
 
+class Test
+{
+}
+class Test1 extends Test
+{
+public static void main(String[] args)
+{
+Test1 test=new Test1();
+sysout(test instanceof Test1); //true
+sysout(test instanceof Test); //true
+sysout(test instanceof Object); //true
+
+Test1 test1=null;
+sysout(test1 instanceof Test1) //false
+}
+}
+
+
+whenever we used to check with some other class it will give C.T error.
+
+class Fun
+{
+}
+Test t1=new Test();
+sysout(t1 instanceof Fun); //c.T.error
+
+//the instanceof operator is used to check the object reference at compile time.
+to check at runtime isInstance() method is used::
+
+Integer i=new Integer(5);
+		System.out.println(Class.forName("java.lang.Integer").isInstance(i)); //true.
+
+
+but it should include the CheckedException:ClassNotFoundException
+		
 
 Abstract::
 ----------
@@ -1382,7 +1443,7 @@ Everyone says "no" as Java does not support pointers. No one actually see the ad
 
 Of course, they are very correct.
 
-In Java the method parameters can be primitive data types or object references. Both are passed as value only but small tricky explanation is here for object references. I repeat, when primitive data types are passed as method parameters, they are passed by value (a copy of the value) but incase of object references, the reference is copied (of course, here also a copy only) and passed to the called method. That is, object reference is passed as a value. So, original reference and the parameter copy both will refer the same Java object. As both refer the same object, if the calling method changes the value of its reference (passed from calling method), the original object value itself changes. Note that object itself is not passed, but its references is passed.
+In Java the method parameters can be primitive data types or object references. Both are passed as value only but small tricky explanation is here for object references. I repeat, when primitive data types are passed as method parameters, they are passed by value (a copy of the value) but incase of object references, the reference is copied (of course, here also a copy only) and passed to the called method. That is, object reference is passed as a value. So, original reference and the parameter copy both will refer the same Java object. As both refer the same object, if the calling method changes the value of its reference (passed from calling method), the original object value itself changes. Note that object itself is not passed, but it’s references is passed.
 
 
  
@@ -3094,6 +3155,7 @@ throws::
 ToCheck::
 ---------
 1.what are the contents inside the jdk and jre folders.
+//jdk includes the development kit and jre includes the runtime environment which is needed to run the java applications specific to the OS.
 2.program to check::
 import java.util.*;
 public class MyClass {
@@ -3116,12 +3178,42 @@ public class MyClass {
         }
     }
 }
+//whenever there is an recursive you should not make that function in while loop because it make function the more iterative.so it is better to use the if condition.
+
 3.methods with same signature but differentiated with static and normal methods.
+
+//because when we are calling the method java doesn't know which method to call.
+
+public class Test
+{
+public static void main(String[] args)
+{
+
+}
+public void fun()
+{
+method(); //doesn't know whether to call static or normal method
+}
+public static void method()
+{
+}
+public void method()
+{
+}
+}
 4.constructor chaining.
+//chaining is possible with in the same class with "this" keyword and constructor chaining is possible in inheritance structure through "super" keyword
 5.what is default method?
+//suppose, if there is an interface, and if there are 100 classes which are inheriting that interface,and all those 100 classes needs to override the methods of that particular interface, suppose incase if there is an addition of new method to that particular interface, and again all those 100 classes needs to inherit the latest method,so it is quite cumbersome to do this it is implemented by default method.
 6.why the protected access modifier is not applied to the class?
 7.what is the difference between exception and error.?
+//exception can be both checked or unchecked. but error is that it can happen with no sufficient resources ex::StackOverflowError
+both error and exception are inherited from Throwable class.
 8.when to go for StringBuilder and StringBuffer?
+//when there is an appending of the string in the loop it is not recommended to use the string class since, string is an immutable class each and every time it is used to create the new string and this might will create lots of strings in the memory, so it is not recommended to use the String class. to implement this kind of features it is highly recommend to use the StringBuilder or StringBuffer.
+StringBuffer::StringBuffer is used when there is thread safety needed.
+StringBuilder::when there is no thread safety is needed it is recommended to use StringBuilder class.
+//Both(StringBuffer and StringBuilder) doesn't override the equals method.
 9.examine the code::
 public class TestExceptionPropagation1{  
   
@@ -3132,8 +3224,10 @@ public class TestExceptionPropagation1{
     System.out.println(xy==ab); //it should return true but it returns false.
   }  
 }  
+//since xy is compiled at runtime it will return false.
 10.java throw keyword?
-11.examine the code
+11.examine the code::
+i.
 public class TestExceptionPropagation1{  
  
   public static void main(String args[]){  
@@ -3143,7 +3237,20 @@ public class TestExceptionPropagation1{
     String str3=str1+str2+"o";
     System.out.println(str==str3); //should return false
   }  
-}  
+} 
+
+As str1 and str2 are c.T constants the expression str3 is evaluated at the compile time itself and since the string "hello" already exists in the constant pool.the new string also points out to the existing string object.
+so,str==str3 returns true.
+
+ii.
+ String str="hello";
+	    String str1= "h";
+	    String str2="ell";
+	    String str3=str1+str2+"o";
+	    System.out.println(str==str3);
+
+//As these are not final string constants and these are string literals these are created in the string constant pool and the "+" operation will create the string in the heap area. so str==str3 returns false.
+ 
 12.examine the code::
 import java.util.Scanner;
 
@@ -3172,16 +3279,25 @@ public class RFibonocci{
     }
     
 }
+
+//whenever there is an recursive you should not make that function in while loop because it make function the more iterative.so it is better to use the if condition.
+
 13.Nested Interfaces //geeksforgeeks
 14.instance of operator //geeksforgeeks
 15.check the following::
+i.
  // String s1=new String("Hello");
         // String s2=s1;
         // s1=s1.concat(" World");
         // System.out.println(s1);
         // System.out.println(s2);
         // System.out.println(s1==s2);
-       
+//initially,s1 and s2 point to hello in the heap area and s1 will create an object in the scp. and when s1 is concatenated it will create the new object in the heap area with hello world and s1 will give hello world and s2 will give hello and s1==s2 will give false.
+
+ii.
          String hello = "Hello", lo = "lo"; 
-         System.out.print(("Hel"+lo)==hello); 
+         System.out.print(("Hel"+lo)==hello); //false
+	System.out.print(("Hel"+lo).intern()==hello); //true
+
+//both hello and lo variables are created in the scp area and "hel"+lo will be created in the heap area so it returns the false. but for ("hel"+lo).intern() will find for the string in the scp area it doesn't exists so it will create a new string in the scp and it gives true. 
 16.java intern method
