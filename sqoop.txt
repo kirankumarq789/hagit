@@ -1,0 +1,173 @@
+sqoop::
+-------
+sqoop is used to let the data transfer happen from one system to another system.
+
+The target system is usually hdfs.
+
+--All the connectors to the source systems are placed in the lib directory installed in sqoop.
+So, if you want to connect to a specific source then that particular connector should be placed inside the lib directory of sqoop.
+
+to get help::
+-------------
+sqoop help
+
+sqoop--list-databases::
+-----------------------
+sqoop list-databases \
+--connect "jdbc:mysql://localhost:3006" \
+--username root
+--password edureka
+
+to give the password at runtime::
+---------------------------------
+sqoop list-databases \
+--connect "jdbc:mysql://localhost:3306/" \
+--username root
+-P
+
+sqoop list-tables::
+-------------------
+sqoop list-tables \
+--connect "jdbc:mysql://localhost:3306/retail_db" \
+--username root \
+--password edureka
+
+sqoop will throw the ouput to the stdout in the console.
+
+1-- will be the output of the sqoop command
+2-- will be the log of the sqoop command.
+
+to write it to the logs::
+
+sqoop list-tables \
+--connect "jdbc:mysql://localhost:3306/retail_db" \
+--username root \
+--password edureka 1>sqoop_data.data 2>sqoop_log.log
+
+to append to the already existing logs::
+
+sqoop list-tables \
+--connect "jdbc:mysql://localhost:3306/retail_db" \
+--username root \
+--password edureka 1>>sqoop_data.data 2>>sqoop_log.log
+
+
+sqoop--eval command::
+---------------------
+the sqoop eval command evaluates a query from the sql and prints the result.
+
+sqoop eval --connect "jdbc:mysql://localhost:3306/retail_db" \
+--username root \
+--password edureka \
+--query "select count(*) from order_items"
+
+
+(or)
+
+sqoop eval --connect "jdbc:mysql://localhost:3306/" \
+--username root \
+--password edureka \
+--query "select count(*) from retail_db.order_items"
+
+sqoop--import::
+----------------
+The sqoop import command is used to import the data from mysql database table to the hdfs directory.
+
+to import the data there are two commands to specify the target directory::
+--target-dir "/user/edureka/sqoop/"
+//the target directory should not exist in the hdfs path while writing the data. (orelse) we can append to the existing directory using --append command
+--warehouse-dir "/user/edureka/sqoop/"
+//it will create a subdirectory with the tablename
+
+by default it will take the primary key or unique key of the table and it will calculate the number of records by taking min(column_name) and max(column_name) and it will take the number of map tasks into count and it will allocate that particular number of records to that mapper task.
+
+//by default the number of map tasks will be "4" and "," is the seperator and file format is "text file".
+
+//the text file format is --as-textfile
+
+command for import using target-dir:
+
+sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items \
+--target-dir "/user/edureka/sqoop/order_items/"
+
+to append::
+
+sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items \
+--target-dir "/user/edureka/sqoop/order_items/" --append
+
+command for import using warehouse-dir:
+
+sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items \
+--warehouse-dir "/user/edureka/sqoop/order_items/"
+
+//while importing from the target table it will create a pojo class(in the directory where the sqoop job is being executed) based on the table metadata and while import everthing is a mapreduce job for sqoop and sqoop is also developed in java, this pojo class is compiled into an jar file and gets submitted into an mapreduce job to the RM.
+
+
+//there are different file formats available with sqoop::
+
+--as-textfile
+--as-avrodatafile
+//Json data in binary format.
+--as-sequencefile
+//binary representation
+--as-parquetfile
+//in columnar format
+
+//while importing a table it must either contain a unique key or an primary key to import using the multiple mappers.
+//if it doesnt contain any key and if we are importing using mutliple mappers it will throw error.
+
+//If we want to import the table with out primary key using multiple mappers we should mention the --split-by column_name
+//If we want to import the table with out primary key and with out --split-by column_name we can keep the -m to 1.
+
+sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items_no_pk --target-dir "/user/edureka/sqoop/order_items_no_pk/" --split-by order_item_id
+
+//If there is an primary key or not (by specifying the column_name) we can specify the number of map tasks on the sqoop job.
+it will be specified either by::
+-m 1 (or)
+--num-mappers 1
+
+--autoreset-to-one-mapper::
+If there is primary key it will use the num mappers (if not mentioned it will use default 4),otherwise it will set the mapper to 1.
+
+//while importing from the table say, if there are 200000(id auto-incremented) and if the num-splits are 4 each mapper will get the 50K records
+//If we insert a row with 1000000(id) into the same table and if the num-splits are 4 then each mapper has to get around(250000) records,so all the records goes to the first mapper and the remaining records doesn't go to mapper 2,3 and the final record(1000000) will go to the last mapper.
+
+--boundary-query::
+
+while retrieving some of the records from the original table there are some fictitious records created for testing in production environment so, while retrieving these records from that table we need to ignore those records.It can be set using the boundary query.
+
+sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items_no_pk \
+--target-dir "/user/edureka/sqoop/order_items_no_pk/" --boundary-query "select min(order_item_id),max(order_item_id) from order_items_no_pk where order_item_id not in (1000000)" --split-by order_item_id
+
+//when boundary query is applied the sqoop query eliminates the records in boundary query and the count is  equally gets distributed.
+
+
+--delete-target-dir::
+
+//it will delete the target directory if exists and place the files in the directory.
+
+sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items_no_pk \
+--target-dir "/user/edureka/sqoop/order_items_no_pk/" --boundary-query "select min(order_item_id),max(order_item_id) from order_items_no_pk where order_item_id not in (1000000)" --split-by order_item_id --delete-target-dir
+
+--columns::
+
+//it is used to select the columns
+
+sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items_no_pk \
+--target-dir "/user/edureka/sqoop/order_items_no_pk/" --boundary-query "select min(order_item_id),max(order_item_id) from order_items_no_pk where order_item_id not in (1000000)" --split-by order_item_id --delete-target-dir --columns "order_item_id,order_item_order_id"
+
+--compression-codec::
+
+//The compression codec is used to compress the generated part-m files into the specified compression format.
+
+ sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items_no_pk --target-dir "/user/edureka/sqoop/order_items_no_pk/" --boundary-query "select min(order_item_id),max(order_item_id) from order_items_no_pk where order_item_id not in (1000000)" --split-by order_item_id --delete-target-dir --columns "order_item_id,order_item_order_id" --compression-codec org.apache.hadoop.io.compress.SnappyCodec
+ 
+ you can use 
+ --compress or -z
+ 
+ the default compression codec is gunzip(.gz) format.
+ 
+ sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table order_items_no_pk --target-dir "/user/edureka/sqoop/order_items_no_pk/" --boundary-query "select min(order_item_id),max(order_item_id) from order_items_no_pk where order_item_id not in (1000000)" --split-by order_item_id --delete-target-dir --columns "order_item_id,order_item_order_id" -z
+ 
+ --query::
+ 
