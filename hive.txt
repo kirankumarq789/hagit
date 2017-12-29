@@ -1,0 +1,52 @@
+hive::
+------
+There are 3 server components of hive::
+1.hive metastore
+//It is used to store the table metadata.
+2.hiveserver2
+3.WebHcatServer
+
+To get into the hive shell::
+type hive and hit enter
+
+to execute the command without entering into the hive shell::
+hive -e "set;"
+
+to search for the specific options in the set command use grep in combination with set;
+
+hive -e "set;" | grep warehouse
+
+set hive.cli.print.current.db=true; gives the current db we are using by default it gives the default database.
+
+All the table metadata is stored in metastore db which is configured in the parameters::(hive-site.xml)
+javax.jdo.option.connectionURL which is pointing towards the RDBMS.
+
+//creation of a sample database in hive::
+create database nyse;
+
+//use database
+use nyse;
+
+//creation of a sample table in hive::
+create table t( i int,s string);
+
+//insert into the table
+insert into table t values(1,"HelloWorld")
+
+you can view the table using the following commands::
+describe t;
+//will show the table columns along with the datatypes.
+
+describe extended t;
+//shows some extra information
+
+describe formatted t;
+//all the metadata of the table in readable format is displayed.
+
+set hive.metastore.warehouse.dir;
+//will display where the data is stored.
+
+//whenever any operations are performed in the hive tables these operations will trigger an MR jobs.
+
+//The hive logs will be stored in the /tmp directory since it uses the directory (java.io.tmp) as default.under this directory it will have the name of that particular user where it will store the hive logs on the daily basis.. the current hive log will be stored as hive.log file.
+
