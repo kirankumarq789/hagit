@@ -50,3 +50,316 @@ set hive.metastore.warehouse.dir;
 
 //The hive logs will be stored in the /tmp directory since it uses the directory (java.io.tmp) as default.under this directory it will have the name of that particular user where it will store the hive logs on the daily basis.. the current hive log will be stored as hive.log file.
 
+//If we want to overrite the specific functions we can override the configurations in hiverc file.
+It will be present in the ~/.hivrc
+
+you can set the properties such as hive.cli.print.current.db=true;
+//will show the db currently using...
+
+//There are 2 types of tables in hive::
+1.external table //It is used when the data already exists in the hdfs directory and there is no corresponding table for that.
+2.managed table //It is used to create when the data doesnot exists in the hdfs directory its like creating a normal table.
+
+To create an external table::
+//specifying the location for external table is mandatory since it depends on the location.
+
+create external table nyse_external_table(
+stockticker string,
+tradedate int,
+openprice float,
+highprice float,
+lowprice float,
+closeprice float,
+volume bigint)
+row format delimited fields terminated by ','
+stored as textfile
+location '/user/edureka/nyse_external'
+
+To create an managed table::
+//specifying the location for the managed table is optional.
+
+create table nyse_managed_table(
+stockticker string,
+tradedate int,
+openprice float,
+highprice float,
+lowprice float,
+closeprice float,
+volume bigint)
+row format delimited fields terminated by ','
+stored as textfile
+location '/user/edureka/nyse_managed'
+
+when we drop the both of the tables using drop command as follows::
+drop table nyse_managed_table;
+drop table nyse_external_table;
+
+//the external data will not be deleted in the hdfs, the reason is it will be retained for running some other alternate programming paradigms such as mapreduce,spark jobs.
+
+//when we drop the managed table it will delete the corresponding hdfs directory aswell.
+
+//to get how the table is created use::
+show create tahle t;
+
+//to create the table and load the local data into the table::
+
+create table nyse_table(
+stockticker string,
+tradedate int,
+openprice float,
+highprice float,
+lowprice float,
+closeprice float,
+volume bigint)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile
+
+
+load data local inpath '/home/edureka/KIRANWS/Datasets/nyse/nyse_all' into table nyse_table
+
+//to load the data that already exists in the hdfs use::
+
+create table nyse_hdfs_table(
+stockticker string,
+tradedate int,
+openprice float,
+highprice float,
+lowprice float,
+closeprice float,
+volume bigint)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile
+
+load data inpath 'hdfs://localhost:8020/user/edureka/nyse_year/" into table nyse_hdfs_table
+
+//If the data for the table is loaded from hdfs directory in to the table then the contents from the source hdfs directory are moved to the destination directory (thus it increases the peformance of the hdfs).
+
+//We can set the partitions for the hive table in 2 ways::
+
+1.list (partitioned by)
+2.Hash (clustered by)
+
+you can create the partition table using ::
+
+create table nyse_list_table(
+stockticker string,
+tradedate int,
+openprice float,
+highprice float,
+lowprice float,
+closeprice float,
+volume bigint)
+partitioned by(tradeyear int)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile
+
+//describe formatted nyse_list_table
+It will show the partitioned by column also in the table description.
+
+//The partitioned column should not be part of the columns list specified as part of the table.
+
+//The partitioned by will create the subdirectories in the hdfs directory of the corresponding hive table however these subdirectories are not available once the table is created it will be available only once if the partition is done.
+
+//to add the partition::
+alter table nyse_list_table add partition (tradeyear=2009);
+alter table nyse_list_table add partition (tradeyear=2010);
+alter table nyse_list_table add partition (tradeyear=2011);
+alter table nyse_list_table add partition (tradeyear=2012);
+alter table nyse_list_table add partition (tradeyear=2013);
+alter table nyse_list_table add partition (tradeyear=2014);
+
+
+ dfs -ls /user/hive/warehouse/nyse.db/nyse_list_table;                                                                    
+Found 6 items
+drwxr-xr-x   - edureka supergroup          0 2017-12-31 17:54 /user/hive/warehouse/nyse.db/nyse_list_table/tradeyear=2009
+drwxr-xr-x   - edureka supergroup          0 2017-12-31 17:59 /user/hive/warehouse/nyse.db/nyse_list_table/tradeyear=2010
+drwxr-xr-x   - edureka supergroup          0 2017-12-31 17:59 /user/hive/warehouse/nyse.db/nyse_list_table/tradeyear=2011
+drwxr-xr-x   - edureka supergroup          0 2017-12-31 17:59 /user/hive/warehouse/nyse.db/nyse_list_table/tradeyear=2012
+drwxr-xr-x   - edureka supergroup          0 2017-12-31 17:59 /user/hive/warehouse/nyse.db/nyse_list_table/tradeyear=2013
+drwxr-xr-x   - edureka supergroup          0 2017-12-31 17:59 /user/hive/warehouse/nyse.db/nyse_list_table/tradeyear=2014
+hive> 
+
+we can load the data into these corresponding direcotories either by using the::
+1.hadoop fs -put
+
+hadoop fs -put /home/edureka/KIRANWS/Datasets/nyse/nyse_year/nyse_2009.txt /user/hive/warehouse/nyse.db/nyse_list_table/tradeyear=2009/
+
+2.load command
+
+load data local inpath '/home/edureka/KIRANWS/Datasets/nyse/nyse_year/nyse_2010.txt' into table nyse_list_table 
+partition(tradeyear=2010);
+
+load data local inpath '/home/edureka/KIRANWS/Datasets/nyse/nyse_year/nyse_2011.txt' into table nyse_list_table 
+partition(tradeyear=2011);
+
+load data local inpath '/home/edureka/KIRANWS/Datasets/nyse/nyse_year/nyse_2012.txt' into table nyse_list_table 
+partition(tradeyear=2012);
+
+load data local inpath '/home/edureka/KIRANWS/Datasets/nyse/nyse_year/nyse_2013.txt' into table nyse_list_table 
+partition(tradeyear=2013);
+
+load data local inpath '/home/edureka/KIRANWS/Datasets/nyse/nyse_year/nyse_2014.txt' into table nyse_list_table 
+partition(tradeyear=2014);
+
+
+//when we select the table with the select command it will show the records of the table along with the partitioned column in the last however in hdfs it will store only the specified fields while creating the table, this extra field will come from the partition command which it internally created the directory.
+
+select * from nyse_list_table limit 5;                                                                          
+OK
+ZTR	20091231	15.68	15.72	15.68	15.72	349600	2009
+ZQK	20091231	2.07	2.07	2.07	2.07	455900	2009
+ZNH	20091231	15.63	15.66	15.63	15.66	48800	2009
+ZMH	20091231	59.65	59.89	59.65	59.89	562200	2009
+ZLC	20091231	2.91	2.91	2.91	2.91	1412700	2009
+Time taken: 0.131 seconds, Fetched: 5 row(s)
+
+
+dfs -tail /user/hive/warehouse/nyse.db/nyse_list_table/tradeyear=2010/nyse_2010.txt
+    > ;
+8.05,0
+AEC,20100101,11.27,11.27,11.27,11.27,0
+AEB,20100101,17.05,17.05,17.05,17.05,0
+ADX,20100101,10.1,10.1,10.1,10.1,0
+ADS,20100101,64.59,64.59,64.59,64.59,0
+ADM,20100101,31.31,31.31,31.31,31.31,0
+ADC,20100101,23.29,23.29,23.29,23.29,0
+ACO,20100101,28.42,28.42,28.42,28.42,0
+
+
+//suppose, If there is a partition with 2015 with few records such as and loaded into the partition::
+
+AEC,20150101,11.27,11.27,11.27,11.27,0
+AEB,20150101,17.05,17.05,17.05,17.05,0
+ADX,20150101,10.1,10.1,10.1,10.1,0
+ADS,20150101,64.59,64.59,64.59,64.59,0
+ADM,20150101,31.31,31.31,31.31,31.31,0
+ADC,20150101,23.29,23.29,23.29,23.29,0
+ACO,20150101,28.42,28.42,28.42,28.42,0
+
+and we have the sample data for 2016 partition records in the local directory.
+
+AEC,20160101,11.27,11.27,11.27,11.27,0
+AEB,20160101,17.05,17.05,17.05,17.05,0
+ADX,20160101,10.1,10.1,10.1,10.1,0
+ADS,20160101,64.59,64.59,64.59,64.59,0
+ADM,20160101,31.31,31.31,31.31,31.31,0
+ADC,20160101,23.29,23.29,23.29,23.29,0
+ACO,20160101,28.42,28.42,28.42,28.42,0
+
+and if data(2016) is loaded in to the partition of 2015 then if the select command is applied it will treat that entire partition as 2015.
+
+//the result will be::
+
+select * from nyse_list_table where tradeyear=2015
+    > ;
+OK
+AEC	20150101	11.27	11.27	11.27	11.27	0	2015
+AEB	20150101	17.05	17.05	17.05	17.05	0	2015
+ADX	20150101	10.1	10.1	10.1	10.1	0	2015
+ADS	20150101	64.59	64.59	64.59	64.59	0	2015
+ADM	20150101	31.31	31.31	31.31	31.31	0	2015
+ADC	20150101	23.29	23.29	23.29	23.29	0	2015
+AEC	20160101	11.27	11.27	11.27	11.27	0	2015
+AEB	20160101	17.05	17.05	17.05	17.05	0	2015
+ADX	20160101	10.1	10.1	10.1	10.1	0	2015
+ADS	20160101	64.59	64.59	64.59	64.59	0	2015
+ADM	20160101	31.31	31.31	31.31	31.31	0	2015
+ADC	20160101	23.29	23.29	23.29	23.29	0	2015
+Time taken: 0.132 seconds, Fetched: 12 row(s)
+hive> 
+
+The key take aways for the list partition are ::
+1.when the partitioned table is created the partitioned column should be independent of the table column.
+2.when the wrong data is loaded into the partition it will not throw any errors.
+
+For the table partitioning there can be 2 scenarios::
+
+1.Having data independently & then creating the partition directory & loading.
+2.having already unpartitioned data in the table which is to be stored in the partitions.(dynamic partition).
+	a.table with the unpartitioned data.
+	b.table with partitioned schema.
+	
+//Inorder to load the data into the table::
+//we have to set the property
+set	hive.exec.dynamic.partition.mode=nonstrict
+
+insert into table nyse_list_table partition (tradeyear) 
+select t.*,cast(substr(tradedate,1,4) as int) tradeyear from nyse_hdfs_table t;
+
+//insert is always recommended than load because the load will be useful only if the preformatted data is available. If there are any transformations involved then it is better to load the data using the insert command.
+
+//If we create a table with '|' as the delimiter and then load the data which is delimited by ',' and in if the select command is applied::
+1.If the first data type of the table is string then it will show::
+first field the content and the remaining fields as null.
+
+ZTR,20091231,15.68,15.72,15.68,15.72,349600	NULL	NULL	NULL	NULL	NULL	NULL
+ZQK,20091231,2.07,2.07,2.07,2.07,455900	NULL	NULL	NULL	NULL	NULL	NULL
+ZNH,20091231,15.63,15.66,15.63,15.66,48800	NULL	NULL	NULL	NULL	NULL	NULL
+ZMH,20091231,59.65,59.89,59.65,59.89,562200	NULL	NULL	NULL	NULL	NULL	NULL
+ZLC,20091231,2.91,2.91,2.91,2.91,1412700	NULL	NULL	NULL	NULL	NULL	NULL
+ZF,20091231,13.48,13.6,13.48,13.6,246400	NULL	NULL	NULL	NULL	NULL	NULL
+
+2.If the first field is not of the string type then,
+
+NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL
+
+//The load into command will always append the contents to the table..
+load data inpath 'directory' into table table_name
+
+//to overwrite the table contents..
+load data inpath 'directory' overwrite into table table_name
+
+//you can execute a group of hive commands by inserting the commands into a file
+
+cat > hive_sql.txt
+use nyse;
+select * from orders_stage limit 10;
+
+hive -f hive_sql.txt 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Configurations::
+1.hive.cli.print.current.db=true;
+2.hive.cli.print.headers=true;
+3.hive.metastore.warehouse.dir;
+4.hive.exec.dynamic.partition.mode=nonstrict
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
