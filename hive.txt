@@ -42,6 +42,7 @@ describe extended t;
 
 describe formatted t;
 //all the metadata of the table in readable format is displayed.
+//such as inputformat,outputformat,field delimiters and line delimiters,owner,created date,number of rows
 
 set hive.metastore.warehouse.dir;
 //will display where the data is stored.
@@ -324,13 +325,90 @@ select * from orders_stage limit 10;
 
 hive -f hive_sql.txt 
 
+//we can create a table of our own format and write the file of our own compression.
+
+lets say we have created the table of sequencefile format.
+
+create table orders_stage
+(
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile;
+
+create table orders_seq
+(
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as sequencefile;
+
+load data local inpath '/home/edureka/KIRANWS/Datasets/retail_db_comma/orders' into table orders_stage;
+
+we have to inform the hive to use the compress and also inform what type of compression is used for that,
+
+hive.exec.compress.output=true; //set for compression.
+mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; //setting the compression codec
+
+to load the data into the orders_seq ::
+insert into table order_seq
+select * from orders_stage;
+
+It will store with that compression specified and with that file format.
+
+when we again set the hive.exec.compress.output=false;
+
+and then again load the data using::
+
+insert into table order_seq
+select * from orders_stage;
+
+It will show all the records of the table with out any error (since the file is in line with the file format specified it will show all the records).
 
 
+Hash partitioning::(clustered by)::
+-----------------------------------
 
+The hash partitioning will be applied on the hash key.
 
+While creating the table we need to specify the hash column to perform bucketing.
 
+create table orders_bucket
+(
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string)
+clustered by (order_id) into 16 buckets
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile
 
+//If the clustered by column is of a string type the hashcode of that particular string is calculated and inserted.
 
+//Before inserting the data we have to set the property::
+hive.enforce.bucketing=true;
+
+//To load the data into the bucketing table we cannot use the load command so the insert command is used.
+
+insert into orders_bucket
+select * from orders_seq;
+
+//The MR job will take care of the sequence file compressed data to be represented in the text file format.
+
+//The hash partitioning is very useful when the retrieval of the data is faster and there will be the uniform distribution of the records.
+
+//If you want to copy the result of the query to the local file use the query::
+
+insert overwrite local directory '/home/edureka/orders_by_status' select order_status,count(1) from orders_stage group by order_status;
+
+//The overwrite should be always defined while throwing the result.
 
 
 
@@ -338,11 +416,20 @@ hive -f hive_sql.txt
 
 
 Configurations::
-1.hive.cli.print.current.db=true;
-2.hive.cli.print.headers=true;
-3.hive.metastore.warehouse.dir;
-4.hive.exec.dynamic.partition.mode=nonstrict
+1.hive.cli.print.current.db=true; //to print current db
+2.hive.cli.print.headers=true;   //to print the table headers
+3.hive.metastore.warehouse.dir;  //the location where the hive tables are stored.
+4.hive.exec.dynamic.partition.mode=nonstrict  //insert into the dynamically created partition.
+5.hive.exec.compress.output=true; //set for compression.
+6.mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; //setting the compression codec
+7.hive.enforce.bucketing //to enforce bucketing(clustered by)
+8.hive.execution.engine
 
+
+doubts::
+1.what is the use of invalidate metadata
+2.why for some of the files the compression file is larger than the normal file
+3.clusetered by vs partitioned by
 
 
 
