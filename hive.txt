@@ -16,6 +16,7 @@ to search for the specific options in the set command use grep in combination wi
 
 hive -e "set;" | grep warehouse
 
+set mapred.job.tracker=local //will set whether the job is running on local mode or mapreduce mode.
 set hive.cli.print.current.db=true; gives the current db we are using by default it gives the default database.
 
 All the table metadata is stored in metastore db which is configured in the parameters::(hive-site.xml)
@@ -27,8 +28,19 @@ create database nyse;
 //use database
 use nyse;
 
+
+//There are several types of datatypes are available while creating the columns in hive::
+tinyint,bigint,smallint,int,float,double,string,varchar,char,timestamp(unix related timestamp),Date
+
+//There are also complex datatypes allowed::
+arrays,maps,structs,unions
+
+
 //creation of a sample table in hive::
-create table t( i int,s string);
+create table t_old( i int,s string);
+
+alter table t_old rename to t_new;
+
 
 //insert into the table
 insert into table t values(1,"HelloWorld")
@@ -411,6 +423,54 @@ insert overwrite local directory '/home/edureka/orders_by_status' select order_s
 //The overwrite should be always defined while throwing the result.
 
 
+HIVE QL::
+---------
+
+//For some of the select queries it will not trigger any MR jobs.
+
+Ex:select * from categories limit 5;
+
+//It will trigger only when there are any transformations are involved.
+
+//while writing queries instead of using or condition we can use the in condition clause.
+
+select count(1) from orders where order_status='Complete' or order_status='Closed';
+
+select count(1) from orders where order_status in ('Complete','Closed');
+
+In hive there are lot of functions available::
+1.predefined
+2.user defined
+
+to show all the functions use::
+show functions;
+
+to get the definition of what does function do::
+describe function max;
+
+
+hive query to get the top 10 products which are sold by quantity where the transaction status of the order is either complete or closed
+
+select * from (
+select d.department_name,c.category_name,p.product_name,sum(oi.order_item_quantity) as totalquantity from order_items oi
+inner join products p
+on oi.order_item_product_id=p.product_id
+inner join categories c
+on c.category_id=p.product_category_id
+inner join departments d
+on d.department_id=c.category_department_id
+inner join orders o
+on o.order_id=oi.order_item_order_id
+where o.order_status in ('COMPLETE','CLOSED')
+group by oi.order_item_product_id,p.product_name,c.category_name,d.department_name 
+order by totalquantity desc
+) t limit 10;
+
+to get the execution plan for  the query ::
+
+explain query;
+
+//It will return the execution plan of the query in stages.
 
 
 
@@ -423,13 +483,263 @@ Configurations::
 5.hive.exec.compress.output=true; //set for compression.
 6.mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; //setting the compression codec
 7.hive.enforce.bucketing //to enforce bucketing(clustered by)
-8.hive.execution.engine
+8.hive.execution.engine=mr;
 
 
 doubts::
 1.what is the use of invalidate metadata
 2.why for some of the files the compression file is larger than the normal file
 3.clusetered by vs partitioned by
+4.load data into the corresponding hdfs directory and then create the table using hive and use the query select *
+
+
+
+-------------
+sample queries
+-------------
+
+create database kiran_stage;
+
+use kiran_stage;
+
+create table categories
+(
+category_id int,
+category_department_id int,
+category_name string)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile;
+
+load data local inpath '/home/edureka/KIRANWS/Datasets/retail_db_comma/categories/'
+into table categories;
+
+create external table customers
+(
+customer_id int,
+customer_fname string,
+customer_lname string,
+customer_email string,
+customer_password string,
+customer_street string,
+customer_city string,
+customer_state string,
+customer_zipcode string)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile
+location '/user/edureka/retail_db_comma/customers/';
+
+create external table departments
+(
+department_id int,
+department_name string)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile
+location '/user/edureka/retail_db_comma/departments/';
+
+
+create external table order_items
+(
+order_item_id int,
+order_item_order_id int,
+order_item_product_id int,
+order_item_quantity int,
+order_item_subtotal float,
+order_item_product_price float)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile
+location '/user/edureka/retail_db_comma/order_items/';
+
+
+create external table orders
+(
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile
+location '/user/edureka/retail_db_comma/orders/';
+
+
+create external table products
+(
+product_id int,
+product_category_id int,
+product_name string,
+product_description string,
+product_price float,
+product_image string)
+row format delimited fields terminated by ','
+lines terminated by '\n'
+stored as textfile
+location '/user/edureka/retail_db_comma/products/';
+
+
+--------------------------
+
+create database kiran_final;
+
+use kiran_final;
+
+
+create table categories
+(
+category_id int,
+category_department_id int,
+category_name string)
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+
+create table customers
+(
+customer_id int,
+customer_fname string,
+customer_lname string,
+customer_email string,
+customer_password string,
+customer_street string,
+customer_city string,
+customer_state string,
+customer_zipcode string)
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+
+create table departments
+(
+department_id int,
+department_name string)
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+
+create table order_items
+(
+order_item_id int,
+order_item_order_id int,
+order_item_product_id int,
+order_item_quantity int,
+order_item_subtotal float,
+order_item_product_price float)
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+
+create table orders
+(
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string)
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+
+
+create table products
+(
+product_id int,
+product_category_id int,
+product_name string,
+product_description string,
+product_price float,
+product_image string)
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+
+
+set hive.exec.compress.output=true;
+set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec;
+
+
+insert into table categories
+select * from kiran_stage.categories;
+
+insert into table customers
+select * from kiran_stage.customers;
+
+insert into table departments
+select * from kiran_stage.departments;
+
+insert into table order_items
+select * from kiran_stage.order_items;
+
+insert into table orders
+select * from kiran_stage.orders;
+
+insert into table products
+select * from kiran_stage.products;
+
+create table order_items_bucket
+(
+order_item_id int,
+order_item_order_id int,
+order_item_product_id int,
+order_item_quantity int,
+order_item_subtotal float,
+order_item_product_price float)
+clustered by (order_item_order_id) into 16 buckets
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+
+
+create table orders_bucket
+(
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string)
+clustered by (order_id) into 16 buckets
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+set hive.enforce.bucketing=true;
+
+
+insert into table order_items_bucket
+select * from order_items;
+
+insert into table orders_bucket
+select * from orders;
+
+set hive.enforce.bucketing=false;
+
+
+create table orders_partition
+(
+order_id int,
+order_date string,
+order_customer_id int,
+order_status string)
+partitioned by (order_month string)
+row format delimited fields terminated by '|'
+lines terminated by '\n'
+stored as textfile;
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+insert into table orders_partition partition(order_month)
+select t.*,substr(t.order_date,6,2) month from orders t;
+
+set hive.exec.compress.output=false;
+set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.DefaultCodec;
+set hive.exec.dynamic.partitin.mode=strict;
 
 
 
