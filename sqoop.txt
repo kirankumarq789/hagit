@@ -2,10 +2,13 @@ sqoop::
 -------
 sqoop is used to let the data transfer happen from one system to another system.
 
+The word sqoop stands for sql+hadooop =sqoop
+
 The target system is usually hdfs.
 
 --All the connectors to the source systems are placed in the lib directory installed in sqoop.
 So, if you want to connect to a specific source then that particular connector should be placed inside the lib directory of sqoop.
+Hence it is called as a connector based architecture.
 
 to get help::
 -------------
@@ -14,7 +17,7 @@ sqoop help
 sqoop--list-databases::
 -----------------------
 sqoop list-databases \
---connect "jdbc:mysql://localhost:3006" \
+--connect "jdbc:mysql://localhost:3306" \
 --username root
 --password edureka
 
@@ -258,7 +261,7 @@ sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root -
 
 so,we can create a table by specifying the fields terminated by::
 
-create table orders(order_id int,order_date string,order_customer_id int,order_status string) row format delimited fields terminated by ',' --fields-terminated-by  delimited fields terminated by ',' --fields-terminated-by '|'; 
+create table orders(order_id int,order_date string,order_customer_id int,order_status string) row format delimited fields terminated by ','; 
 
 sqoop--import-all command::
 
@@ -306,12 +309,32 @@ we can perform the delta data loads in 2 ways::
  
  sqoop import --connect "jdbc:mysql://localhost:3306/retail_db" --username root --password edureka --table orders --hive-import --hive-table edureka.orders --check-column order_id --incremental append --last-value 68883
  
+ 
+ //If we are importing the delta data with the help of timestamp column we should specify for incremental as lastmodified.
+ 
  //sometimes, the sqoop statement is unable to fetch the records using the primary key column of varchar type so we need to pass the configuration parameter::
  
  sqoop import-all-tables -Dorg.apache.sqoop.splitter.allow-text-splitter=true
  
+//To get the logs of the mapreduce job::
+
+mapred job -logs job_id task_id;
+
+//To kill the particular job::
+mapred job -kill job_id;
+
+
+sqoop import is not good for::
+1.If there is lot of data.
+2.If the sql database which we are importing from is machine critical(since it will use 4 mappers and these mappers will produce 4 connections to the database and it will do the full table scan).
  
- 
+sqoop export::
+--------------
+sqoop export --connect "jdbc:mysql://localhost:3306/export_db" --username root --password edureka --table export_table --export-dir /user/edureka/order_items/ --input-fields-terminated-by ',' --m 1
+
+//The table schema should be defined before the export in the mysql database.
+//For export there will not be any min and max calculation it is simply copying the files data to the database.
+
 
  
  

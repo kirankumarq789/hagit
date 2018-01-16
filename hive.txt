@@ -472,7 +472,71 @@ explain query;
 
 //It will return the execution plan of the query in stages.
 
+//we can create a view on the tables::
+the view is doesn't store the data in the physical form it only stores the data in the logical form.
 
+when we want to use joins multiple on some tables we can use a view.
+//we can also use views in joins also.
+
+we can create a view using::
+
+hive (kiran_final)> create or replace view vw_order_order_items as select o.*,oi.* from orders o join order_items oi on o.order_id=oi.order_item_id;
+
+//when in a query the order by clause is specified then there will be only one reducer task running on the data and sorting is appropriate.
+
+//when in a query the sort by clause is applied it will try to sort the data in the each of the reduce task and final output which we will get is may not be in sorted order.
+
+//the cluster by clause is similar to the partition by and sort by (it will partitons and applies sort by).
+
+//the partition by clause is used to divide the data into multiple reducers and sorting is not performed.
+
+
+joins are of 4 types::
+1.innerjoin
+
+select category_name,product_name from categories cat join products p
+                  > on cat.category_id=p.product_category_id limit 2;
+
+
+2.left
+
+select category_name,product_name from categories cat left join products p
+                  > on cat.category_id=p.product_category_id limit 2;
+
+
+3.right
+
+select category_name,product_name from categories cat right join products p
+                  > on cat.category_id=p.product_category_id limit 2;
+
+
+4.full outer
+
+select category_name,product_name from categories cat full outer join products p
+                  > on cat.category_id=p.product_category_id limit 2;
+				  
+over by clause::
+the over by clause is used to combine both the partition data with the nonpartition data.
+
+
+by default all the joins are map side joins if we want the joins to be reduce side then we have to set the configuration property to be::
+set hive.auto.covert.join=true;
+
+//If it is false then the join will be reduce side join.
+
+difference between order by and sort by::
+//In order by it will use one and only one reducer to sort the entire data and sorted order is guaranteed and because it is using 1 reducer it may cause the contention of resources.
+//In Sort by it will use the multiple reducers it will sort the data running in that entire reducer and there is no guarantee of sorted order.
+
+//to create the one table from another table::
+use::
+create table orders_another as select * from orders; //It will create the table schema as well as the data is inserted.
+//But,while copying the data it will not copy the field delimters it will use the hive default delimiters only.
+//If we want to override the defaults then::
+create table orders_another1 row format delimited fields terminated by ',' lines terminated by '\n' as select * from orders;
+
+to create a table with only the schema::
+create table orders_another1 as select * from orders where 1=2;
 
 
 Configurations::
@@ -491,7 +555,9 @@ doubts::
 2.why for some of the files the compression file is larger than the normal file
 3.clusetered by vs partitioned by
 4.load data into the corresponding hdfs directory and then create the table using hive and use the query select *
-
+5.hive udfs's(user defined functions)
+6.hive table creation with xml and json schemas
+7.create a table with both the partition and cluster by schemas
 
 
 -------------
