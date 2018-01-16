@@ -245,6 +245,11 @@ def ncr(n:Int,r:Int)={
 
 }
 
+
+to run this in repl use::
+val args=Array("5","2");
+HelloWorld.main(args);
+
 Classes::
 ---------
 -->Unlike java, it takes only few lines of code to create classes along with boiler plate code.
@@ -385,7 +390,13 @@ case class Department(
                        departmentId: Int,
                        departmentName: String
                      )
+//The apply method is used to create the object without writing the new keyword.
 
+if it is not the case class and if we want to create the object::
+val dep=new Department(1,"HR")
+
+if it is a case class then it will implicitly gives the apply method::
+val dept=Department(1,"HR")
 
 18.Scala::Collections
 ---------------------
@@ -555,7 +566,8 @@ object MyObject{
      | MyObject.fun(10,20)                                                                                                                                                      
      | }                                                                                                                                                                        
      | }  
-
+	 
+//we can call using MyObject.main(null)
 //it is an immutable object because it doesn't have any state(any parameters) that will effect this object.
 
 22.The objects in scala can be created in two types
@@ -630,7 +642,10 @@ what is imperative programming language?
 7.to watch the setting up ide from itversity in eclipse and intellij both
 8.what are primitive types and what are the advantages of using primitive types rather than using class types?
 9.Are the functions are also treated as objects?
-
+10.how can we able to add or remove elements to the immutable map?
+//when we create an immutable and mutable map here are the differences::
+immutable Map:: scala.collection.immutableMap
+//you cannot change the contents of the added elements in the map collection.
 
 
 
