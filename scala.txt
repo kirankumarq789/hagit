@@ -619,7 +619,77 @@ println("fun2 method")
 }
 
 
+Scala collections::
+-------------------
+						Traversable
+						    |
+						Iterable
+						    |
+				---------------------------------------------
+				|		    |			     |
+			       seq		   set			    map
+			       
+//The traversable is main trait.
+//we can create a variable of traversable by::
+var m:Traversable[Int]=Traversable(1,2,3);
+m.foreach(println)
 
+in seq there are 2 more traits::
+1.IndexedSeq(vector,Range,String)
+2.LinearSeq(List)
+
+//Array is an mutable where as list is an immutable collection.
+
+var m=Array(1,2,3,4);
+m(0)=5
+println(m(0)) //5
+
+var m=List(1,2,3,4);
+m(0)=5 //throws error as list is an immutable collection.
+println(m(0)) //5
+
+case class Order(
+                  orderId: Int,
+                  orderDate: String,
+                  orderCustomerId: Int,
+                  orderStatus: String
+                )
+
+val os = List(
+  Order(1, "2017-01-01", 100, "COMPLETE"), 
+  Order(2, "2017-01-01", 20, "CLOSED"),
+  Order(3, "2017-01-01", 301, "PENDING"),
+  Order(4, "2017-01-01", 202, "CLOSED"),
+  Order(5, "2017-01-01", 3013, "COMPLETE"),
+  Order(6, "2017-01-01", 203, "PENDING"),
+  Order(7, "2017-01-01", 3014, "COMPLETE"),
+  Order(8, "2017-01-01", 20, "NEW"),
+  Order(9, "2017-01-01", 301, "PENDING"),
+  Order(10, "2017-01-01", 2, "CLOSED"),
+  Order(11, "2017-01-01", 1, "COMPLETE"),
+  Order(12, "2017-01-01", 3, "NEW"),
+  Order(13, "2017-01-01", 301, "COMPLETE")
+)
+
+var osnew=os.filter(o=>(o.orderStatus=="COMPLETE")).map(o=>1).
+reduce((tot,ele)=>tot+ele)
+//we have to map to 1 because it will have order object and we cannot reduce on order object.
+(or)
+var osnew=os.filter(o=>(o.orderStatus=="COMPLETE")).length
+(or)
+
+//filter by 2 or more conditions.
+var osnew=os.filter(o=>(o.orderStatus=="COMPLETE" || o.orderStatus=="CLOSED")).length
+
+println(osnew)
+
+var (even,odd)=(1 to 100).toList.partition(_%2==0)
+println("Even")
+even.foreach(println)
+println("Odd")
+odd.foreach(println)
+
+//we have to use toList because it will by default give the Range object.
 
 
 
