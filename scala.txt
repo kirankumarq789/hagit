@@ -692,8 +692,135 @@ odd.foreach(println)
 //we have to use toList because it will by default give the Range object.
 
 
+if we want to filter the data we can use::
+val completedorders=os.filter(_.orderStatus=="COMPLETE").map(_=>1).reduce(_+_)
+
+val completedorders=os.filter(_.orderStatus=="COMPLETE")
+
+if we want to sort the data we can use ::
+1.sorted::
+val l=List(1,9,4,3)
+l.sorted;
+2.sortBy::
+val orders=os.sortBy(-_.orderCustomerId);
+//sorts by descending order 
+3.sortWith
+//sortWith is used when we want to apply our own custom logic::
+val orders=os.sortWith(_.orderCustomerId<_.orderCustomerId) //sorts in ascending order of orderCustomerId
 
 
+//groupBy will always give a Map.
+
+val groups=os.groupBy(_.orderStatus).map(m=>(m._1,m._2.length))
+groups: scala.collection.immutable.Map[String,Int] = Map(NEW -> 2, PENDING -> 3, COMPLETE -> 5, CLOSED -> 3)
+
+scala> val groups=os.groupBy(_.orderStatus).map(m=>(m._1,m._2.length)).foreach(println)
+(NEW,2)
+(PENDING,3)
+(COMPLETE,5)
+(CLOSED,3)
+groups: Unit = ()
+
+
+Set::
+
+val os1 = Set(
+     |   Order(1, "2017-01-01", 100, "COMPLETE"), 
+     |   Order(2, "2017-01-01", 20, "CLOSED")
+     | )
+os1: scala.collection.immutable.Set[Order] = Set(Order(1,2017-01-01,100,COMPLETE), Order(2,2017-01-01,20,CLOSED))
+
+scala> 
+
+scala> val os2 = Set(
+     |   Order(2, "2017-01-01", 20, "CLOSED"),
+     |   Order(3, "2017-01-01", 301, "PENDING"),
+     |   Order(4, "2017-01-01", 202, "CLOSED"),
+     |   Order(5, "2017-01-01", 3013, "COMPLETE")
+     | )
+os2: scala.collection.immutable.Set[Order] = Set(Order(2,2017-01-01,20,CLOSED), Order(3,2017-01-01,301,PENDING), Order(4,2017-01-01,202,CLOSED), Order(5,2017-01-01,3013,COMPLETE))
+
+scala> 
+
+scala> os1.union(os2)
+res5: scala.collection.immutable.Set[Order] = Set(Order(5,2017-01-01,3013,COMPLETE), Order(3,2017-01-01,301,PENDING), Order(1,2017-01-01,100,COMPLETE), Order(4,2017-01-01,202,CLOSED), Order(2,2017-01-01,20,CLOSED))
+
+scala> os1 | os2
+res6: scala.collection.immutable.Set[Order] = Set(Order(5,2017-01-01,3013,COMPLETE), Order(3,2017-01-01,301,PENDING), Order(1,2017-01-01,100,COMPLETE), Order(4,2017-01-01,202,CLOSED), Order(2,2017-01-01,20,CLOSED))
+
+scala> 
+
+scala> os1.intersect(os2)
+res7: scala.collection.immutable.Set[Order] = Set(Order(2,2017-01-01,20,CLOSED))
+
+scala> os1 & os2
+res8: scala.collection.immutable.Set[Order] = Set(Order(2,2017-01-01,20,CLOSED))
+
+scala> 
+
+scala> os1.diff(os2)
+res9: scala.collection.immutable.Set[Order] = Set(Order(1,2017-01-01,100,COMPLETE))
+
+scala> os1 &~ os2
+res10: scala.collection.immutable.Set[Order] = Set(Order(1,2017-01-01,100,COMPLETE))
+
+scala> os2.diff(os1)
+res11: scala.collection.immutable.Set[Order] = Set(Order(3,2017-01-01,301,PENDING), Order(4,2017-01-01,202,CLOSED), Order(5,2017-01-01,3013,COMPLETE))
+
+scala> os2 &~ os1
+res12: scala.collection.immutable.Set[Order] = Set(Order(3,2017-01-01,301,PENDING), Order(4,2017-01-01,202,CLOSED), Order(5,2017-01-01,3013,COMPLETE))
+
+scala> 
+
+//set will not allow to insert the duplicates::
+ val l=Set(1,2,3,1,4);
+l: scala.collection.immutable.Set[Int] = Set(1, 2, 3, 4)
+
+scala> 
+
+Map::
+
+Map is a keyvalue pair.
+
+ val m = Map(
+     | (1, Order(1, "2017-01-01", 100, "COMPLETE")),
+     | (2, Order(2, "2017-01-01", 20, "CLOSED")),
+     | (3, Order(3, "2017-01-01", 301, "PENDING")),
+     | (4, Order(4, "2017-01-01", 202, "CLOSED")),
+     | (5, Order(5, "2017-01-01", 3013, "COMPLETE"))
+     | )
+m: scala.collection.immutable.Map[Int,Order] = Map(5 -> Order(5,2017-01-01,3013,COMPLETE), 1 -> Order(1,2017-01-01,100,COMPLETE), 2 -> Order(2,2017-01-01,20,CLOSED), 3 -> Order(3,2017-01-01,301,PENDING), 4 -> Order(4,2017-01-01,202,CLOSED))
+
+scala> m(1)
+res0: Order = Order(1,2017-01-01,100,COMPLETE)
+
+scala> m.get(1).get
+res1: Order = Order(1,2017-01-01,100,COMPLETE)
+
+scala> m.getOrElse(1, "Not Available")
+res2: java.io.Serializable = Order(1,2017-01-01,100,COMPLETE)
+
+scala> m.getOrElse(10, "Not Available")
+res3: java.io.Serializable = Not Available
+
+scala> m.keys
+res4: Iterable[Int] = Set(5, 1, 2, 3, 4)
+
+scala> m.values
+res5: Iterable[Order] = MapLike(Order(5,2017-01-01,3013,COMPLETE), Order(1,2017-01-01,100,COMPLETE), Order(2,2017-01-01,20,CLOSED), Order(3,2017-01-01,301,PENDING), Order(4,2017-01-01,202,CLOSED))
+
+scala> m.filterKeys(a => a >= 2)
+res6: scala.collection.immutable.Map[Int,Order] = Map(5 -> Order(5,2017-01-01,3013,COMPLETE), 2 -> Order(2,2017-01-01,20,CLOSED), 3 -> Order(3,2017-01-01,301,PENDING), 4 -> Order(4,2017-01-01,202,CLOSED))
+
+scala> m.mapValues(a => (a.orderStatus, 1)).map(_._2).toList
+res7: List[(String, Int)] = List((COMPLETE,1), (CLOSED,1), (PENDING,1))
+
+
+
+import scala.io.Source;
+val fileName="/home/edureka/electionresults/ls2014.tsv"
+var results=Source.fromFile(fileName).getLines;
+results.filter(_.split("\\t")(2)=="None of the Above").map(m=>(m.split("\\t")(0),m.split("\\t")(10).toInt)).toList.groupBy(_._1).map(m=>(m._1,m._2.map(_._2).reduce((a,b)=>a+b))).toList.sortBy(-_._2).foreach(println)
 
 
 
