@@ -538,6 +538,31 @@ create table orders_another1 row format delimited fields terminated by ',' lines
 to create a table with only the schema::
 create table orders_another1 as select * from orders where 1=2;
 
+HIVE UDF's::(User Defined Functions)
+------------
+In hive there are 2 types of UDF's::
+1.Simple UDF's (suitable for Text, IntWritable, LongWritable, DoubleWritable, etc.)
+2.Generic UDF's (suitable for Array,List,Map)
+
+for simple UDF we need to implement::org.apache.hadoop.hive.ql.exec.UDF and need to implement method for Evaluate
+for generic UDF we need to implement::org.apache.hadoop.hive.ql.udf.generic.GenericUDF and we need to implement(getDisplayString,
+initialize,
+evaluate)
+//here will take one input and produce a single output from the UDF.
+
+
+HIVE UDAF's::(User Defined Aggregate Functions)
+-----------------------------------------------
+:We have to extend a base Class UDAF to write our business logic in Java. Step2: We need to overwrite five methods called init(), iterate(), terminatePartial(), merge() and terminate() in our class
+
+//here we'll take multiple entries and produce a single record
+
+HIVE UDTF's::(User Defined Tabular Function (UDTF))
+-----------------------------------------------
+//here we'll take single input and produce multiple output records.
+
+
+
 
 Configurations::
 1.hive.cli.print.current.db=true; //to print current db
