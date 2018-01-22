@@ -208,6 +208,27 @@ grouped: org.apache.spark.rdd.RDD[(String, (Iterable[Int], Iterable[Int]))] = Ma
 scala> grouped.collect()
 res10: Array[(String, (Iterable[Int], Iterable[Int]))] = Array((key1,(CompactBuffer(1, 3),CompactBuffer(5))), (key2,(CompactBuffer(2),CompactBuffer(4))))
 
+SetOperations::
+---------------
+union will get all the elements from both the data sets
+intersect will get all the elements common in both the data sets
+distinct will get all the distinct elements in a data set
+In case of union, it will not get distinct elements. Apply distinct, if you only want to get distinct elements after union.
+When we use set operations such as union and intersect, data should have similar structure
+Diff and complement are not available on top of RDDs
+
+products201312.intersection(products201401).count
+
+Sorting::
+---------
+sortByKey() //it will sort by the key
+sortBy() //we can pass the condition
+
+DataFrames::
+-------------
+
+
+
 
 
 There are several transformation we can do in the spark with the help of map,filter,flatMap.
