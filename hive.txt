@@ -560,7 +560,7 @@ HIVE UDAF's::(User Defined Aggregate Functions)
 HIVE UDTF's::(User Defined Tabular Function (UDTF))
 -----------------------------------------------
 //here we'll take single input and produce multiple output records.
-
+//UDTF is nothing but the Generic UDF.
 
 
 
