@@ -187,6 +187,29 @@ When two data sets of type (k, v) and (k, w) are grouped, it will result in (k, 
 //Before joining these datasets should be in a key value pair.
 orders.join(orderitems)
 
+//cogroup
+cogroup will combine the collection in that particular collection and cogrouped collection 
+val rdd1 = sc.parallelize(Seq(
+     |                ("key1", 1),
+     |                ("key2", 2),
+     |                ("key1", 3)))
+rdd1: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[25] at parallelize at :21
+
+scala> val rdd2 = sc.parallelize(Seq(
+     |                ("key1", 5),
+     |                ("key2", 4)))
+rdd2: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[26] at parallelize at :21
+
+//cogroup() Example
+scala> val grouped = rdd1.cogroup(rdd2)
+grouped: org.apache.spark.rdd.RDD[(String, (Iterable[Int], Iterable[Int]))] = MapPartitionsRDD[28] at cogroup at :25
+
+//Result
+scala> grouped.collect()
+res10: Array[(String, (Iterable[Int], Iterable[Int]))] = Array((key1,(CompactBuffer(1, 3),CompactBuffer(5))), (key2,(CompactBuffer(2),CompactBuffer(4))))
+
+
+
 There are several transformation we can do in the spark with the help of map,filter,flatMap.
 
 flatMap::
