@@ -226,6 +226,134 @@ sortBy() //we can pass the condition
 
 DataFrames::
 -------------
+Since most of the data is structured we can leverage on dataframes::
+Dataframes is a collection of complex objects stored in memory.
+//use is rather than taking the corespark apis and splitting the data which is error prone it is best to develop using the dataframes.
+
+//while defining the dataframe as an collection we need to specify the caseclass for that particular datasets.
+
+//A DataFrame can be converted to the RDD and viceversa is also possible.
+//The dependency needs to be added is ::
+libraryDependencies += "org.apache.spark" % "spark-sql_2.10" % "1.6.2"
+
+DataFrame operations::
+
+    printSchema
+    show
+    select
+    group
+    agg
+    sort
+    and many more
+
+To create a DataFrame::
+case class Orders(
+order_id:Int,order_date:String,order_customer_id:Int,order_status:String)
+
+val ordersDF=sc.textFile("/user/edureka/retail_db/orders/").map(x=>{val rec=x.split(",");
+Orders(rec(0).toInt,rec(1),rec(2).toInt,rec(3))}).toDF
+
+ordersDF: org.apache.spark.sql.DataFrame = [order_id: int, order_date: string, order_customer_id: int, order_status: string]
+
+//If we didn't mention it as toDF in the above line of code then it will be the RDD[Orders]
+//The Dataframes also follow the lazy evaluation like the RDD.
+
+ val ordersfilter=ordersDF.filter(ordersDF("order_status")==="COMPLETE").show
+ val ordersfilter=ordersDF.filter(ordersDF("order_status")==="COMPLETE").count
+ 
+//show will bydefault show the 20 rows.
+
+ordersfilter.show()
+ordersfilter.printSchema()
+ordersfilter.select(ordersfilter("order_id")).show
+
+//IF we want to apply some analytic functions in the context of native-sql::
+we have to convert the Dataframe into an temporary table::
+
+ordersDF.registerTempTable("tempord")
+sqlContext.sql("select count(1) from tempord").show
+
+sqlContext.sql("select count(1) from tempord where order_status='COMPLETE'").show()
+
+sqlContext.setConf("spark.sql.shuffle.partitions", "2") //It will set the no of partitions to 2
+
+val ordersFiltered = ordersDF.
+filter(ordersDF("order_status") === "COMPLETE")
+val ordersJoin = ordersFiltered.join(orderItemsDF,
+ordersFiltered("order_id") === orderItemsDF("order_item_order_id"))
+ordersJoin.
+groupBy("order_date").
+agg(sum("order_item_subtotal")).
+sort("order_date").
+rdd.
+saveAsTextFile(outputPath)
+
+
+------------------------------------------------
+case class Orders(
+order_id:Int,order_date:String,order_customer_id:Int,order_status:String)
+
+case class OrderItems(
+order_item_id:Int,order_item_order_id:Int,order_item_product_id:Int,
+order_item_quantity:Int,order_item_subtotal:Float,
+order_item_product_price:Float)
+
+sqlContext.setConf("spark.sql.shuffle.partitions", "2");
+
+val inputPath="/user/edureka/retail_db";
+val outputPath="/user/edureka/orderOP/";
+
+val ordersDF = sc.textFile(inputPath + "/orders").
+map(rec => {
+val a = rec.split(",")
+Orders(a(0).toInt, a(1).toString(), a(2).toInt, a(3).toString())
+}).toDF();
+
+val orderItemsDF = sc.textFile(inputPath + "/order_items").
+map(rec => {
+val a = rec.split(",")
+OrderItems(
+a(0).toInt,
+a(1).toInt,
+a(2).toInt,
+a(3).toInt,
+a(4).toFloat,
+a(5).toFloat)
+}).toDF();
+
+val ordersFiltered = ordersDF.
+filter(ordersDF("order_status") === "COMPLETE")
+val ordersJoin = ordersFiltered.join(orderItemsDF,
+ordersFiltered("order_id") === orderItemsDF("order_item_order_id"))
+ordersJoin.
+groupBy("order_date").
+agg(sum("order_item_subtotal")).
+sort("order_date").
+rdd.
+saveAsTextFile(outputPath)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
