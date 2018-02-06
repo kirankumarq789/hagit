@@ -486,9 +486,9 @@ hive (kiran_final)> create or replace view vw_order_order_items as select o.*,oi
 
 //when in a query the sort by clause is applied it will try to sort the data in the each of the reduce task and final output which we will get is may not be in sorted order.
 
-//the cluster by clause is similar to the partition by and sort by (it will partitons and applies sort by).
+//the cluster by clause is similar to the distributed by and sort by (it will partitons and applies sort by).
 
-//the partition by clause is used to divide the data into multiple reducers and sorting is not performed.
+//the distributed by clause is used to divide the data into multiple reducers(where data is non-overlapping) and sorting is not performed.
 
 
 joins are of 4 types::
