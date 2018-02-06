@@ -573,6 +573,8 @@ Configurations::
 6.mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; //setting the compression codec
 7.hive.enforce.bucketing=true; //to enforce bucketing(clustered by)
 8.hive.execution.engine=mr;
+9.Hive Strict Mode ( hive.mapred.mode=strict) enables hive to restrict certain performance intensive operations. Such as –
+It restricts queries of partitioned tables without a WHERE clause.
 
 
 doubts::
