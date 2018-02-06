@@ -64,7 +64,7 @@ set hive.metastore.warehouse.dir;
 //The hive logs will be stored in the /tmp directory since it uses the directory (java.io.tmp) as default.under this directory it will have the name of that particular user where it will store the hive logs on the daily basis.. the current hive log will be stored as hive.log file.
 
 //If we want to overrite the specific functions we can override the configurations in hiverc file.
-It will be present in the ~/.hivrc
+It will be present in the ~/.hiverc
 
 you can set the properties such as hive.cli.print.current.db=true;
 //will show the db currently using...
@@ -107,12 +107,12 @@ when we drop the both of the tables using drop command as follows::
 drop table nyse_managed_table;
 drop table nyse_external_table;
 
-//the external data will not be deleted in the hdfs, the reason is it will be retained for running some other alternate programming paradigms such as mapreduce,spark jobs.
+//the external location data will not be deleted in the hdfs, the reason is it will be retained for running some other alternate programming paradigms such as mapreduce,spark jobs.
 
 //when we drop the managed table it will delete the corresponding hdfs directory aswell.
 
 //to get how the table is created use::
-show create tahle t;
+show create table t;
 
 //to create the table and load the local data into the table::
 
@@ -571,7 +571,7 @@ Configurations::
 4.hive.exec.dynamic.partition.mode=nonstrict  //insert into the dynamically created partition.
 5.hive.exec.compress.output=true; //set for compression.
 6.mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; //setting the compression codec
-7.hive.enforce.bucketing //to enforce bucketing(clustered by)
+7.hive.enforce.bucketing=true; //to enforce bucketing(clustered by)
 8.hive.execution.engine=mr;
 
 
