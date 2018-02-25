@@ -412,4 +412,64 @@ Review the joins?
 
 
 
+---------------------------------------------------------------------------------
+
+
+
+sc.textFile("/user/edureka/wordCount.txt").flatMap(x=>x.split(" ")).map(x=>(x,1)).reduceByKey(_+_).collect.foreach(println)
+
+spark://master:7077
+
+spark-shell --master yarn --conf spark.ui.port=536121
+
+sqlContext.sql("select * from categories limit 10")
+
+http://10.0.2.15:56321
+
+hadoop fs -cp retail_db retail_db_hive
+
+
+case class Orders(
+order_id:Int,order_date:String,order_customer_id:Int,order_status:String)
+
+case class OrderItems(
+order_item_id:Int,order_item_order_id:Int,order_item_product_id:Int,
+order_item_quantity:Int,order_item_subtotal:Float,
+order_item_product_price:Float)
+
+sqlContext.setConf("spark.sql.shuffle.partitions", "2");
+
+val inputPath="/user/edureka/retail_db";
+val outputPath="/user/edureka/orderOP/";
+
+val ordersDF = sc.textFile(inputPath + "/orders").
+map(rec => {
+val a = rec.split(",")
+Orders(a(0).toInt, a(1).toString(), a(2).toInt, a(3).toString())
+}).toDF();
+
+val orderItemsDF = sc.textFile(inputPath + "/order_items").
+map(rec => {
+val a = rec.split(",")
+OrderItems(
+a(0).toInt,
+a(1).toInt,
+a(2).toInt,
+a(3).toInt,
+a(4).toFloat,
+a(5).toFloat)
+}).toDF();
+
+val ordersFiltered = ordersDF.
+filter(ordersDF("order_status") === "COMPLETE")
+val ordersJoin = ordersFiltered.join(orderItemsDF,
+ordersFiltered("order_id") === orderItemsDF("order_item_order_id"))
+ordersJoin.
+groupBy("order_date").
+agg(sum("order_item_subtotal")).
+sort("order_date").
+rdd.
+saveAsTextFile(outputPath)
+
+
 
