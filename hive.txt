@@ -3,8 +3,17 @@ hive::
 There are 3 server components of hive::
 1.hive metastore
 //It is used to store the table metadata.
+//To start the hive metastore service::
+hive --service metastore &
 2.hiveserver2
+//HS2 is an server interface of hive. It supports the concurrency and multi user authentication.
 3.WebHcatServer
+
+
+//There are multiple clients which will use the hive server components::
+1.HIVE CLI
+2.HUE
+
 
 To get into the hive shell::
 type hive and hit enter
@@ -176,6 +185,11 @@ It will show the partitioned by column also in the table description.
 
 //The partitioned by will create the subdirectories in the hdfs directory of the corresponding hive table however these subdirectories are not available once the table is created it will be available only once if the partition is done.
 
+
+//The partitioned by should always have the less cardinality.
+
+Ex::If the partitioned by is an timestamp. for each and every record insertion into the hive table it will create the directory and then it inserts the record.As, the memory space of HDFS is limited by the namespace volume of the NN. too much folders creation will eat up the NN memory.Hence instead of timestamp it is better practice to have (year,month,day)
+
 //to add the partition::
 alter table nyse_list_table add partition (tradeyear=2009);
 alter table nyse_list_table add partition (tradeyear=2010);
@@ -331,11 +345,13 @@ load data inpath 'directory' overwrite into table table_name
 
 //you can execute a group of hive commands by inserting the commands into a file
 
-cat > hive_sql.txt
+cat > hive_sql.hql
 use nyse;
 select * from orders_stage limit 10;
 
-hive -f hive_sql.txt 
+hive -f hive_sql.hql
+
+//It is better if we give the extension with .hql so that we can determine it is an hive query language.
 
 //we can create a table of our own format and write the file of our own compression.
 
@@ -473,9 +489,9 @@ explain query;
 //It will return the execution plan of the query in stages.
 
 //we can create a view on the tables::
-the view is doesn't store the data in the physical form it only stores the data in the logical form.
+the view doesn't store the data in the physical form it only stores the data in the logical form.
 
-when we want to use joins multiple on some tables we can use a view.
+when we want to use multiple joins on some tables we can use a view.
 //we can also use views in joins also.
 
 we can create a view using::
@@ -557,11 +573,62 @@ HIVE UDAF's::(User Defined Aggregate Functions)
 
 //here we'll take multiple entries and produce a single record
 
+Ex:Sum
+
 HIVE UDTF's::(User Defined Tabular Function (UDTF))
 -----------------------------------------------
 //here we'll take single input and produce multiple output records.
 //UDTF is nothing but the Generic UDF.
 
+
+ORC::
+-----
+it stands for Optimized Row Columnar Format.
+
+Ex:: If in a text file the students table records are stored as::
+
+sno 	sname	total
+1		kiran    80
+2		sandy	 70
+
+It stores the records one by one in a file with the delimiters of field and line as::
+1,kiran,80|2,sandy,70
+
+suppose if we want to sum(total) then it will take one row by another row and it will take the total for that particular record and it will do the same process for the next level of transformations for that record and gives the sum.
+
+Instead in ORC::
+these records are stored in multiple partitions so that the logic is applied parallely on those multiple partitions and these records are stored in such a way that all the column values are stored together and when we apply sum(total) it will not take entire record, it will take all the total record columns and apply the sum logic.
+
+
+//It will increase the performance by reducing the network Io and File Io.
+//It increases the Query Performance.
+
+create table student_orc
+stored as Orc.
+
+//To set the default file format to ORC
+hive.default.fileformat=Orc
+
+//To make the Query further optimized we can use partitioned by and clustered by also,
+
+Hive Vectorization::
+--------------------
+In a typical hive query execution it will take and process one record at a time, where as in hive vectorization it will take a batch of records and process them together.
+
+we can set this feature using::
+set hive.vectorized.execution.enabled=true;
+
+Hive Record updation::
+----------------------
+
+//hive record updations are possible form v0.14
+but below are the conditions::
+1.fileformat must be Orc.
+2.TBLProperties(transactional='true')
+3.table must be clustered by
+
+
+//you can't update on the clustered by column.
 
 
 Configurations::
