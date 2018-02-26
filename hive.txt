@@ -51,6 +51,12 @@ create table t_old( i int,s string);
 alter table t_old rename to t_new;
 
 
+//To alter column names::
+CREATE TABLE test_change (a int, b int, c int);
+
+// will change column a's name to a1
+ALTER TABLE test_change CHANGE a a1 INT;
+
 //insert into the table
 insert into table t values(1,"HelloWorld")
 
@@ -504,7 +510,7 @@ hive (kiran_final)> create or replace view vw_order_order_items as select o.*,oi
 
 //the cluster by clause is similar to the distributed by and sort by (it will partitons and applies sort by).
 
-//the distributed by clause is used to divide the data into multiple reducers(where data is non-overlapping) and sorting is not performed.
+//the distribute by clause is used to divide the data into multiple reducers(where data is non-overlapping) and sorting is not performed.
 
 
 joins are of 4 types::
@@ -579,6 +585,140 @@ HIVE UDTF's::(User Defined Tabular Function (UDTF))
 -----------------------------------------------
 //here we'll take single input and produce multiple output records.
 //UDTF is nothing but the Generic UDF.
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDTF;
+
+
+Hive UDF::
+---------
+package org.hardik.letsdobigdata;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.ql.exec.UDF;
+import org.apache.hadoop.io.Text;
+public class Strip extends UDF {
+private Text result = new Text();
+ public Text evaluate(Text str, String stripChars) {
+ if(str == null) {
+ return null;
+ }
+ result.set(StringUtils.strip(str.toString(), stripChars));
+ return result;
+ }
+ public Text evaluate(Text str) {
+ if(str == null) {
+ return null;
+ }
+ result.set(StringUtils.strip(str.toString()));
+ return result;
+ }
+}
+
+CREATE TEMPORARY FUNCTION STRIP AS 'org.hardik.letsdobigdata.Strip';
+
+select strip('   hiveUDF ') from dummy;
+
+Hive GenericUDF::
+-----------------
+class ComplexUDFExample extends GenericUDF {
+
+  ListObjectInspector listOI;
+  StringObjectInspector elementOI;
+
+  @Override
+  public String getDisplayString(String[] arg0) {
+    return "arrayContainsExample()"; // this should probably be better
+  }
+
+  @Override
+  public ObjectInspector initialize(ObjectInspector[] arguments) throws UDFArgumentException {
+    if (arguments.length != 2) {
+      throw new UDFArgumentLengthException("arrayContainsExample only takes 2 arguments: List<T>, T");
+    }
+    // 1. Check we received the right object types.
+    ObjectInspector a = arguments[0];
+    ObjectInspector b = arguments[1];
+    if (!(a instanceof ListObjectInspector) || !(b instanceof StringObjectInspector)) {
+      throw new UDFArgumentException("first argument must be a list / array, second argument must be a string");
+    }
+    this.listOI = (ListObjectInspector) a;
+    this.elementOI = (StringObjectInspector) b;
+    
+    // 2. Check that the list contains strings
+    if(!(listOI.getListElementObjectInspector() instanceof StringObjectInspector)) {
+      throw new UDFArgumentException("first argument must be a list of strings");
+    }
+    
+    // the return type of our function is a boolean, so we provide the correct object inspector
+    return PrimitiveObjectInspectorFactory.javaBooleanObjectInspector;
+  }
+  
+  @Override
+  public Object evaluate(DeferredObject[] arguments) throws HiveException {
+    
+    // get the list and string from the deferred objects using the object inspectors
+    List<String> list = (List<String>) this.listOI.getList(arguments[0].get());
+    String arg = elementOI.getPrimitiveJavaObject(arguments[1].get());
+    
+    // check for nulls
+    if (list == null || arg == null) {
+      return null;
+    }
+    
+    // see if our list contains the value we need
+    for(String s: list) {
+      if (arg.equals(s)) return new Boolean(true);
+    }
+    return new Boolean(false);
+  }
+  
+}
+
+
+HIVE UDAF::
+-----------
+
+import org.apache.hadoop.hive.ql.exec.UDAF;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.hive.ql.exec.UDAFEvaluator;
+@SuppressWarnings("deprecation")
+public class Max extends UDAF {
+	public static class MaxIntUDAFEvaluator implements UDAFEvaluator {
+		private IntWritable output;
+		public void init()
+		{
+			output = null;
+		}
+		public boolean iterate(IntWritable maxvalue) // Process input table
+		{
+			if (maxvalue == null)
+			{
+				return true;
+			}
+			if (output == null)
+			{
+				output = new IntWritable(maxvalue.get());
+			}
+			else
+			{
+				output.set(Math.max(output.get(), maxvalue.get()));
+			}
+			return true;
+		}
+		public IntWritable terminatePartial()
+		{
+			return output;
+		}
+		public boolean merge(IntWritable other)
+		{
+			return iterate(other);
+		}
+		public IntWritable terminate() // final result
+		{
+			return output;
+		}
+	}
+}
+
+
 
 
 ORC::
@@ -701,15 +841,23 @@ on customer_partitioned.id = sub.match_key
 update contacts set phone = mask(phone) where customer = 'MaxLeads';
 
 Configurations::
-1.hive.cli.print.current.db=true; //to print current db
-2.hive.cli.print.headers=true;   //to print the table headers
-3.hive.metastore.warehouse.dir;  //the location where the hive tables are stored.
-4.hive.exec.dynamic.partition.mode=nonstrict  //insert into the dynamically created partition.
-5.hive.exec.compress.output=true; //set for compression.
-6.mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; //setting the compression codec
-7.hive.enforce.bucketing=true; //to enforce bucketing(clustered by)
-8.hive.execution.engine=mr;
-9.Hive Strict Mode ( hive.mapred.mode=strict) enables hive to restrict certain performance intensive operations. Such as –
+hive.exec.mode.local.auto=false; //sets the hive exec mode not to local.
+set hive.cli.print.current.db=true; //Prints the current DB.
+javax.jdo.option.connectionURL //which is pointing towards the RDBMS.
+hive.metastore.uris; //gives a thrift based service that connects to the hive metastore.
+set hive.metastore.warehouse.dir; //prints the warehouse dir.
+set hive.cli.print.header=true; //prints the table headers.
+set	hive.exec.dynamic.partition.mode=nonstrict //this property needs to be set for the dynamic partitioning.
+hive.exec.compress.output=true; //set for compression.
+mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec; //setting the compression codec
+set hive.exec.compress.intermediate=true; //it will compress the intermediate output generated from maps.
+set hive.auto.convert.join=true; //mapjoin--true,reducejoin-false
+set hive.exec.parallel=true //to set the parallel execution of the jobs.
+hive.default.fileformat=Orc //to set the default file format to ORC.
+set hive.vectorized.execution.enabled=true; //to set the vectorized execution.
+hive.enforce.bucketing=true; //to enforce bucketing(clustered by)
+hive.execution.engine=mr;
+Hive Strict Mode ( hive.mapred.mode=strict) enables hive to restrict certain performance intensive operations. Such as –
 It restricts queries of partitioned tables without a WHERE clause.
 
 
