@@ -10,6 +10,7 @@ ex: a function updating a global variable, and we cannot predict the output of t
 what are the benefits of pure functions?
 a.the pure functions are safe.
 b.the output of pure functions is always same for the valid inputs at any time.
+c.we can use these functions as function composition(chaining of functions).
 
 what is meant by first class functions?
 //The first class functions should satisfy these three conditions.
