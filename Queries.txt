@@ -1,0 +1,5 @@
+Q1.how to upgrade spark 1.0 cluster to spark 2.0
+Q2.what is rowRDD
+q3.what is the difference between map and map partition.
+Q4.what is the difference between DAG and lineage
+Q5.how to apply conditions on sqoop incremental command?
