@@ -7,5 +7,6 @@
 6.hive udfs
 7.how to store documents(pdfs and word docs) in hive?
 8.what is tez mode?
-9.what is thrift server?
+9.what is thrift server?(done)
 10.setup tez on hive
+
