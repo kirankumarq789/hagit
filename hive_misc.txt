@@ -9,4 +9,3 @@
 8.what is tez mode?
 9.what is thrift server?
 10.setup tez on hive
-
