@@ -9,4 +9,6 @@
 8.what is tez mode?
 9.what is thrift server?(done)
 10.setup tez on hive
+11.hive udf with complex API(generic udf)
+12.hive indexing
 
