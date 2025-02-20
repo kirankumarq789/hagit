@@ -1,0 +1,28 @@
+def parse_name(name):
+    suffixes = {'jr', 'sr', 'i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x'}
+    parts = name.split()
+    suffix = ''
+    
+    if parts:
+        last_part = parts[-1].lower().rstrip('.')
+        if last_part in suffixes:
+            suffix = parts.pop()
+    
+    first, middle, last = '', '', ''
+    num_parts = len(parts)
+    
+    if num_parts == 1:
+        last = parts[0]
+    elif num_parts == 2:
+        first, last = parts
+    elif num_parts > 2:
+        first = parts[0]
+        last = parts[-1]
+        middle = ' '.join(parts[1:-1])
+    
+    return {
+        'first': first,
+        'middle': middle,
+        'last': last,
+        'suffix': suffix
+    }
